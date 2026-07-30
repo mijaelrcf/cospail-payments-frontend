@@ -1,73 +1,72 @@
-# React + TypeScript + Vite
+# Cospail Payments Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend de pagos para Cospail. Construido con React 19, TypeScript y Vite.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **React 19** + **TypeScript**
+- **Vite 8** (bundler/dev server)
+- **Tailwind CSS 4** (estilos)
+- **TanStack React Query 5** (data fetching/caching)
+- **Axios** (HTTP client)
+- **React Router 7** (ruteo)
+- **Zustand** (estado global)
+- **ESLint** (linter)
 
-## React Compiler
+## Requisitos
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Node.js 20+
+- npm 10+
 
-## Expanding the ESLint configuration
+## Instalación
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Ejecutar en desarrollo
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+npm run dev
+```
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Abre [http://localhost:5173](http://localhost:5173) en el navegador.
+
+## Build para producción
+
+```bash
+npm run build
+```
+
+El output se genera en la carpeta `dist/`.
+
+## Preview del build
+
+```bash
+npm run preview
+```
+
+## Linter
+
+```bash
+npm run lint
+```
+
+## Variables de entorno
+
+| Variable | Descripción | Default |
+|---|---|---|
+| `VITE_API_BASE_URL` | URL base de la API | `https://localhost:7020/api` |
+
+## Estructura del proyecto
+
+```
+src/
+├── app/            # Configuración de la app (router, providers)
+├── application/    # Casos de uso / lógica de aplicación
+├── assets/         # Recursos estáticos (imágenes, SVGs)
+├── domain/         # Entidades, reglas de negocio, interfaces
+├── infrastructure/ # Implementaciones concretas (API, repositorios)
+├── presentation/   # Componentes de UI (páginas, layouts, componentes)
+└── shared/         # Utilidades compartidas, tipos, helpers
 ```
