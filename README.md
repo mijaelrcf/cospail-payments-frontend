@@ -62,11 +62,21 @@ npm run lint
 
 ```
 src/
-├── app/            # Configuración de la app (router, providers)
-├── application/    # Casos de uso / lógica de aplicación
-├── assets/         # Recursos estáticos (imágenes, SVGs)
-├── domain/         # Entidades, reglas de negocio, interfaces
-├── infrastructure/ # Implementaciones concretas (API, repositorios)
-├── presentation/   # Componentes de UI (páginas, layouts, componentes)
-└── shared/         # Utilidades compartidas, tipos, helpers
+├── api/         # Cliente HTTP y funciones de API
+├── app/         # Configuración de la app (router, providers)
+├── components/  # Componentes de UI reutilizables
+├── hooks/       # Custom hooks con React Query
+├── pages/       # Páginas de la aplicación
+├── store/       # Estado global con Zustand
+├── types/       # Interfaces y tipos compartidos
+├── index.css
+└── main.tsx
 ```
+
+## Flujo de la aplicación
+
+1. El usuario ingresa **código fijo** y **documento de identidad**
+2. Se consulta la deuda del socio vía API (`/cospailsoap/member-debt-by-document`)
+3. Se muestran las deudas pendientes; el usuario selecciona las que desea pagar
+4. Se genera un código QR vía API (`/BancoEconomico/generate-qr`)
+5. El QR se muestra en pantalla para que el usuario pueda escanearlo y pagar

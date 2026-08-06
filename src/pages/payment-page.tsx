@@ -4,7 +4,7 @@ import { QrViewer } from '../components/qr-viewer'
 import { useMemberDebt } from '../hooks/use-member-debt'
 import { useGenerateQr } from '../hooks/use-generate-qr'
 import { usePaymentStore } from '../store/payment-store'
-import type { DebtItem } from '../../domain/entities/debt-item'
+import type { DebtItem } from '../types/debt-item'
 
 export function PaymentPage() {
   const {

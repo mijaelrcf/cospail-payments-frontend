@@ -1,7 +1,7 @@
 import { create } from 'zustand'
-import type { DebtItem } from '../../domain/entities/debt-item'
-import type { QrResult } from '../../domain/entities/qr-result'
-import type { MemberDebtResponse } from '../../domain/entities/member-debt-response'
+import type { DebtItem } from '../types/debt-item'
+import type { QrResult } from '../types/qr-result'
+import type { MemberDebtResponse } from '../types/member-debt-response'
 
 interface PaymentState {
   debtResponse: MemberDebtResponse | null

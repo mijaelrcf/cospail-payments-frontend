@@ -1,4 +1,4 @@
-import type { DebtItem } from '../../domain/entities/debt-item'
+import type { DebtItem } from '../types/debt-item'
 
 interface Props {
   items: DebtItem[]
