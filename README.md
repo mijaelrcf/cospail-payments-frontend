@@ -75,9 +75,9 @@ src/
 
 ## Flujo de la aplicación
 
-1. El usuario ingresa **código fijo** y **documento de identidad**
-2. Se consulta la deuda del socio vía API (`/Cospail/member-debt-by-document`)
-3. Se muestran las deudas pendientes; el usuario selecciona las que desea pagar
+1. El usuario ingresa **código fijo** y **documento de identidad** en la página de ingreso (`/`)
+2. Se valida al socio vía API (`/Cospail/member-debt-by-document`) y se muestra el **menú principal** (`/menu`)
+3. **Pago QR** (`/pago-qr`): se muestra el código fijo y nombre del socio con sus deudas pendientes; el usuario selecciona las que desea pagar
 4. Se registran las deudas seleccionadas vía API (`/Cospail/payments/initiate`)
-5. Se genera un código QR asociado al pago vía API (`/BancoEconomico/generate-qr`)
-6. El QR se muestra en pantalla para que el usuario pueda escanearlo y pagar
+5. Se genera un código QR asociado al pago vía API (`/BancoEconomico/generate-qr`) y se muestra en pantalla para que el usuario pueda escanearlo y pagar
+6. **Ver Pagos QR** (`/ver-pagos-qr`) y **Facturas Últimos 6 meses** (`/facturas`) están disponibles desde el menú

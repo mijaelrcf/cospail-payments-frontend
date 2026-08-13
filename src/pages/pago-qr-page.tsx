@@ -1,42 +1,31 @@
-import { DebtSearchForm } from '../components/debt-search-form'
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { DebtList } from '../components/debt-list'
-import { QrViewer } from '../components/qr-viewer'
-import { useMemberDebt } from '../hooks/use-member-debt'
 import { useInitiatePayment } from '../hooks/use-initiate-payment'
 import { useGenerateQr } from '../hooks/use-generate-qr'
 import { usePaymentStore } from '../store/payment-store'
 import type { DebtItem } from '../types/debt-item'
 
-export function PaymentPage() {
+export function PagoQrPage() {
   const {
     debtResponse,
     selectedDebts,
-    qrResult,
-    fixedCode,
-    documentId,
-    initiatedPayment,
-    setDebtResponse,
     setSelectedDebts,
     setQrResult,
-    setFixedCode,
-    setDocumentId,
     setInitiatedPayment,
   } = usePaymentStore()
 
-  const memberDebtMutation = useMemberDebt()
+  const navigate = useNavigate()
   const initiatePaymentMutation = useInitiatePayment()
   const generateQrMutation = useGenerateQr()
 
-  const handleSearch = async (fixedCode: number, documentId: string) => {
-    setQrResult(null)
-    setSelectedDebts([])
-    setInitiatedPayment(null)
-    setFixedCode(fixedCode)
-    setDocumentId(documentId)
+  useEffect(() => {
+    if (!debtResponse) {
+      navigate('/', { replace: true })
+    }
+  }, [debtResponse, navigate])
 
-    const result = await memberDebtMutation.mutateAsync({ fixedCode, documentId })
-    setDebtResponse(result)
-  }
+  if (!debtResponse) return null
 
   const toggleDebt = (item: DebtItem) => {
     const exists = selectedDebts.some((x) => x.creditNumber === item.creditNumber)
@@ -50,11 +39,9 @@ export function PaymentPage() {
   }
 
   const handleGenerateQr = async () => {
-    if (fixedCode === null || documentId === null) return
-
     const payment = await initiatePaymentMutation.mutateAsync({
-      fixedCode,
-      documentId,
+      fixedCode: debtResponse.fixedCode,
+      documentId: debtResponse.documentId,
       debts: selectedDebts.map((x) => ({
         creditNumber: x.creditNumber,
         type: x.type,
@@ -73,28 +60,29 @@ export function PaymentPage() {
     })
 
     setQrResult(result)
+    navigate('/qr-result')
   }
 
   const total = selectedDebts.reduce((sum, item) => sum + item.amount, 0)
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-6">
-      <h1 className="text-3xl font-bold">Pago de Deudas Cospail</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Pago QR</h1>
+        <button
+          onClick={() => navigate('/menu')}
+          className="rounded-xl border border-slate-300 px-4 py-2 text-slate-600"
+        >
+          Volver al menú
+        </button>
+      </div>
 
-      <DebtSearchForm
-        onSearch={handleSearch}
-        loading={memberDebtMutation.isPending}
-      />
+      <div className="rounded-2xl bg-slate-100 p-4">
+        <p className="font-semibold">Código Fijo: {debtResponse.fixedCode}</p>
+        <p>Socio: {debtResponse.memberName}</p>
+      </div>
 
-      {debtResponse && (
-        <div className="rounded-2xl bg-slate-100 p-4">
-          <p className="font-semibold">Estado: {debtResponse.status}</p>
-          <p>Socio: {debtResponse.memberName}</p>
-          <p>Mensaje: {debtResponse.message}</p>
-        </div>
-      )}
-
-      {debtResponse?.debts?.length ? (
+      {debtResponse.debts.length ? (
         <>
           <DebtList
             items={debtResponse.debts}
@@ -124,15 +112,11 @@ export function PaymentPage() {
             </button>
           </div>
         </>
-      ) : null}
-
-      {initiatedPayment && !qrResult?.qrImage && (
-        <div className="rounded-2xl bg-blue-50 p-4">
-          <p className="font-semibold">Pago registrado: Bs {initiatedPayment.totalAmount.toFixed(2)}</p>
+      ) : (
+        <div className="rounded-2xl bg-slate-100 p-4">
+          <p className="text-slate-600">El socio no tiene deudas pendientes.</p>
         </div>
       )}
-
-      {qrResult?.qrImage && <QrViewer qrBase64={qrResult.qrImage} />}
     </div>
   )
 }
