@@ -1,10 +1,13 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { DebtList } from '../components/debt-list'
 import { useInitiatePayment } from '../hooks/use-initiate-payment'
 import { useGenerateQr } from '../hooks/use-generate-qr'
 import { usePaymentStore } from '../store/payment-store'
 import type { DebtItem } from '../types/debt-item'
+
+const isOlder = (a: DebtItem, b: DebtItem) =>
+  a.year < b.year || (a.year === b.year && a.month < b.month)
 
 export function PagoQrPage() {
   const {
@@ -14,6 +17,8 @@ export function PagoQrPage() {
     setQrResult,
     setInitiatedPayment,
   } = usePaymentStore()
+
+  const [selectionError, setSelectionError] = useState<string | null>(null)
 
   const navigate = useNavigate()
   const initiatePaymentMutation = useInitiatePayment()
@@ -28,10 +33,23 @@ export function PagoQrPage() {
   if (!debtResponse) return null
 
   const toggleDebt = (item: DebtItem) => {
+    setSelectionError(null)
+
     const exists = selectedDebts.some((x) => x.creditNumber === item.creditNumber)
 
     if (exists) {
-      setSelectedDebts(selectedDebts.filter((x) => x.creditNumber !== item.creditNumber))
+      setSelectedDebts(selectedDebts.filter((x) => isOlder(x, item)))
+      return
+    }
+
+    const hasUnselectedOlderDebt = debtResponse.debts.some(
+      (debt) => isOlder(debt, item) && !selectedDebts.some((x) => x.creditNumber === debt.creditNumber)
+    )
+
+    if (hasUnselectedOlderDebt) {
+      setSelectionError(
+        'Debes seleccionar primero la deuda más antigua. No puedes pagar una deuda reciente sin haber pagado las anteriores.'
+      )
       return
     }
 
@@ -89,6 +107,12 @@ export function PagoQrPage() {
             selectedItems={selectedDebts}
             onToggle={toggleDebt}
           />
+
+          {selectionError && (
+            <p className="rounded-2xl bg-amber-50 p-4 text-sm text-amber-700 font-medium">
+              {selectionError}
+            </p>
+          )}
 
           <div className="rounded-2xl bg-white p-4 shadow">
             <p className="mb-3 text-lg font-bold">
