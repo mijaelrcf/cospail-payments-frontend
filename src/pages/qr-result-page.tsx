@@ -1,11 +1,12 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { AppShell, BackButton } from '../components/app-shell'
 import { QrViewer } from '../components/qr-viewer'
 import { usePaymentStore } from '../store/payment-store'
 
 export function QrResultPage() {
   const navigate = useNavigate()
-  const { qrResult, initiatedPayment } = usePaymentStore()
+  const { qrResult, initiatedPayment, debtResponse } = usePaymentStore()
 
   useEffect(() => {
     if (!qrResult) {
@@ -16,29 +17,34 @@ export function QrResultPage() {
   if (!qrResult) return null
 
   return (
-    <div className="mx-auto max-w-xl space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Código QR</h1>
-        <button
-          onClick={() => navigate('/menu')}
-          className="rounded-xl border border-slate-300 px-4 py-2 text-slate-600"
-        >
-          Volver al menú
-        </button>
+    <AppShell memberName={debtResponse?.memberName} fixedCode={debtResponse?.fixedCode}>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="mt-1 font-display text-xl font-bold text-cospail-ink">Código QR</h1>
+        </div>
+        <BackButton onClick={() => navigate('/menu')} />
+      </div>
+
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cospail-navy/60">
+            Paso 2 · Paga desde tu banco
+          </p>
+        </div>
       </div>
 
       {initiatedPayment && (
-        <div className="rounded-2xl bg-slate-100 p-4 text-center">
-          <p className="font-semibold">
-            Pago por: Bs {initiatedPayment.totalAmount.toFixed(2)}
+        <div className="mb-6 rounded-2xl border border-cospail-green/40 bg-cospail-green-tint p-5 text-center">
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-cospail-green-dark">
+            QR registrado
           </p>
-          <p className="text-sm text-slate-500">
-            Escanea el código QR desde tu aplicación bancaria para pagar.
+          <p className="mt-1 font-display text-3xl font-bold text-cospail-ink">
+            Bs {initiatedPayment.totalAmount.toFixed(2)}
           </p>
         </div>
       )}
 
       <QrViewer qrBase64={qrResult.qrImage} />
-    </div>
+    </AppShell>
   )
 }
