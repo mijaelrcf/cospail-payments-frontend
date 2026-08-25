@@ -1,20 +1,25 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AppShell, BackButton } from '../components/app-shell'
-import { QrViewer } from '../components/qr-viewer'
+import { PendingQrCard } from '../components/pending-qr-card'
 import { usePaymentStore } from '../store/payment-store'
 
 export function QrResultPage() {
   const navigate = useNavigate()
-  const { qrResult, initiatedPayment, debtResponse } = usePaymentStore()
+  const { qrResult, initiatedPayment, debtResponse, setInitiatedPayment } = usePaymentStore()
 
   useEffect(() => {
-    if (!qrResult) {
+    if (!qrResult || !initiatedPayment) {
       navigate('/menu', { replace: true })
     }
-  }, [qrResult, navigate])
+  }, [qrResult, initiatedPayment, navigate])
 
-  if (!qrResult) return null
+  if (!qrResult || !initiatedPayment) return null
+
+  const handleAnnulled = () => {
+    setInitiatedPayment(null)
+    navigate('/menu')
+  }
 
   return (
     <AppShell memberName={debtResponse?.memberName} fixedCode={debtResponse?.fixedCode}>
@@ -25,26 +30,18 @@ export function QrResultPage() {
         <BackButton onClick={() => navigate('/menu')} />
       </div>
 
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cospail-navy/60">
-            Paso 2 · Paga desde tu banco
-          </p>
-        </div>
+      <div className="mb-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cospail-navy/60">
+          Paso 2 · Paga desde tu banco
+        </p>
       </div>
 
-      {initiatedPayment && (
-        <div className="mb-6 rounded-2xl border border-cospail-green/40 bg-cospail-green-tint p-5 text-center">
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-cospail-green-dark">
-            QR registrado
-          </p>
-          <p className="mt-1 font-display text-3xl font-bold text-cospail-ink">
-            Bs {initiatedPayment.totalAmount.toFixed(2)}
-          </p>
-        </div>
-      )}
-
-      <QrViewer qrBase64={qrResult.qrImage} />
+      <PendingQrCard
+        pagoCospailId={initiatedPayment.pagoCospailId}
+        qrImage={qrResult.qrImage}
+        amount={initiatedPayment.totalAmount}
+        onAnnulled={handleAnnulled}
+      />
     </AppShell>
   )
 }

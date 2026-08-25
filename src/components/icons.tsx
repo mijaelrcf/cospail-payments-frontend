@@ -105,3 +105,21 @@ export function InfoIcon(props: IconProps) {
     </svg>
   )
 }
+
+export function XIcon(props: IconProps) {
+  return (
+    <svg {...baseProps(props)}>
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </svg>
+  )
+}
+
+export function ClockIcon(props: IconProps) {
+  return (
+    <svg {...baseProps(props)}>
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  )
+}

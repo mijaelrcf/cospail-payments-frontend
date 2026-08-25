@@ -1,6 +1,6 @@
 export interface QrResult {
   qrId: string
-  qrImage: string
+  qrImage: string | null
   responseCode: number
-  message: string
+  message: string | null
 }
