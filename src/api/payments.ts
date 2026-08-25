@@ -4,6 +4,7 @@ import type { MemberDebtResponse } from '../types/member-debt-response'
 import type { ActiveQrResponse } from '../types/active-qr-response'
 import type { AnnulQrResponse } from '../types/annul-qr-response'
 import type { PagoCospailResponse } from '../types/pago-cospail-response'
+import type { RecentPayment } from '../types/recent-payment'
 import type { QrResult } from '../types/qr-result'
 
 export async function getMemberDebtByDocument(fixedCode: number, documentId: string): Promise<MemberDebtResponse> {
@@ -73,5 +74,12 @@ export async function annulQr(payload: AnnulQrRequest): Promise<AnnulQrResponse>
 
 export async function getPaymentStatus(pagoCospailId: string): Promise<PagoCospailResponse> {
   const response = await axiosClient.get(`/Cospail/payments/${pagoCospailId}`)
+  return response.data
+}
+
+export async function getRecentPayments(fixedCode: number, status?: string): Promise<RecentPayment[]> {
+  const response = await axiosClient.get('/Cospail/payments/recent', {
+    params: { fixedCode, ...(status !== undefined && { status }) },
+  })
   return response.data
 }
