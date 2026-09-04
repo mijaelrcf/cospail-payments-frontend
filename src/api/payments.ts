@@ -6,6 +6,7 @@ import type { AnnulQrResponse } from '../types/annul-qr-response'
 import type { PagoCospailResponse } from '../types/pago-cospail-response'
 import type { RecentPayment } from '../types/recent-payment'
 import type { QrResult } from '../types/qr-result'
+import type { InvoicePdf, InvoiceSummary } from '../types/invoice'
 
 export async function getMemberDebtByDocument(fixedCode: number, documentId: string): Promise<MemberDebtResponse> {
   const response = await axiosClient.get('/Cospail/member-debt-by-document', {
@@ -81,5 +82,17 @@ export async function getRecentPayments(fixedCode: number, status?: string): Pro
   const response = await axiosClient.get('/Cospail/payments/recent', {
     params: { fixedCode, ...(status !== undefined && { status }) },
   })
+  return response.data
+}
+
+export async function getLast6MonthsInvoices(fixedCode: number): Promise<InvoiceSummary[]> {
+  const response = await axiosClient.get('/Cospail/invoices/last-6-months', {
+    params: { fixedCode },
+  })
+  return response.data
+}
+
+export async function getInvoicePdf(creditNumber: number): Promise<InvoicePdf> {
+  const response = await axiosClient.get(`/Cospail/invoices/${creditNumber}/pdf`)
   return response.data
 }
