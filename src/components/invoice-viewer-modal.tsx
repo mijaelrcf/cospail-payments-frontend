@@ -67,11 +67,11 @@ export function InvoiceViewerModal({ invoice, onClose }: Props) {
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h2 className="font-display text-lg font-bold text-cospail-ink">
-            Factura {invoice?.invoiceNumber || `#${invoice?.creditNumber ?? ''}`}
+            Factura #{invoice?.creditNumber ?? ''}
           </h2>
           {invoice && (
             <p className="mt-0.5 text-xs text-cospail-ink/60">
-              {invoice.period || 'Período no disponible'} · Crédito{' '}
+              Crédito{' '}
               <span className="font-mono font-medium text-cospail-navy">{invoice.creditNumber}</span>
               {' · '}Bs {invoice.amount.toFixed(2)}
             </p>

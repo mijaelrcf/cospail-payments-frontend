@@ -1,18 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AppShell, BackButton } from '../components/app-shell'
 import { EmptyState } from '../components/empty-state'
-import { ArrowRightIcon, InfoIcon, ReceiptIcon } from '../components/icons'
+import { InfoIcon, ReceiptIcon } from '../components/icons'
 import { InvoiceViewerModal } from '../components/invoice-viewer-modal'
 import { useInvoices } from '../hooks/use-invoices'
 import { usePaymentStore } from '../store/payment-store'
 import type { InvoiceSummary } from '../types/invoice'
 
-function formatChargeDate(value: string | null): string {
-  if (!value) return 'Fecha no disponible'
+function formatMonth(value: string | null): string {
+  if (!value) return '—'
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
-  return date.toLocaleDateString('es-BO', { day: '2-digit', month: 'short', year: 'numeric' })
+  const formatted = date.toLocaleDateString('es-BO', { month: 'long', year: 'numeric' })
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1)
 }
 
 export function FacturasPage() {
@@ -27,9 +28,20 @@ export function FacturasPage() {
     }
   }, [debtResponse, navigate])
 
+  const sortedInvoices = useMemo(() => {
+    const list = [...(invoicesQuery.data ?? [])]
+    list.sort((a, b) => {
+      const dateA = a.chargeDate ? new Date(a.chargeDate).getTime() : 0
+      const dateB = b.chargeDate ? new Date(b.chargeDate).getTime() : 0
+      if (dateB !== dateA) return dateB - dateA
+      return b.creditNumber - a.creditNumber
+    })
+    return list
+  }, [invoicesQuery.data])
+
   if (!debtResponse) return null
 
-  const invoices = invoicesQuery.data ?? []
+  const invoices = sortedInvoices
 
   return (
     <AppShell memberName={debtResponse.memberName} fixedCode={debtResponse.fixedCode}>
@@ -65,40 +77,47 @@ export function FacturasPage() {
           onBack={() => navigate('/menu')}
         />
       ) : (
-        <ul className="space-y-3">
-          {invoices.map((invoice) => (
-            <li key={invoice.creditNumber}>
-              <button
-                type="button"
-                onClick={() => setSelectedInvoice(invoice)}
-                className="group flex w-full cursor-pointer items-center justify-between gap-4 rounded-2xl border border-cospail-navy/10 bg-white p-4 shadow-sm transition hover:border-cospail-sky/70 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cospail-sky/25"
-              >
-                <span className="flex items-center gap-4">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cospail-sky-tint text-cospail-navy">
-                    <ReceiptIcon className="h-5 w-5" />
-                  </span>
-                  <span className="text-left">
-                    <span className="block font-semibold text-cospail-ink">
-                      {invoice.period || invoice.invoiceNumber || `Crédito ${invoice.creditNumber}`}
-                    </span>
-                    <span className="block text-xs text-cospail-ink/60">
-                      {formatChargeDate(invoice.chargeDate)} · Crédito{' '}
-                      <span className="font-mono font-medium text-cospail-navy">
-                        {invoice.creditNumber}
-                      </span>
-                    </span>
-                  </span>
-                </span>
-                <span className="flex items-center gap-3">
-                  <span className="block font-display text-lg font-bold text-cospail-navy">
+        <div className="overflow-x-auto rounded-3xl bg-white shadow-sm ring-1 ring-cospail-navy/5">
+          <table className="w-full min-w-[480px] border-collapse text-left text-sm">
+            <thead>
+              <tr className="border-b border-cospail-navy/10 text-xs font-semibold uppercase tracking-[0.12em] text-cospail-navy/60">
+                <th scope="col" className="px-5 py-4">
+                  Mes
+                </th>
+                <th scope="col" className="px-5 py-4 text-right">
+                  Monto
+                </th>
+                <th scope="col" className="px-5 py-4 text-right">
+                  Factura
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {invoices.map((invoice) => (
+                <tr
+                  key={invoice.creditNumber}
+                  className="border-b border-cospail-navy/5 transition last:border-0 hover:bg-cospail-sky-tint/40"
+                >
+                  <td className="px-5 py-4 font-semibold text-cospail-ink">
+                    {formatMonth(invoice.chargeDate)}
+                  </td>
+                  <td className="px-5 py-4 text-right font-display font-bold text-cospail-navy">
                     Bs {invoice.amount.toFixed(2)}
-                  </span>
-                  <ArrowRightIcon className="h-5 w-5 text-cospail-ink/30 transition group-hover:text-cospail-sky" />
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
+                  </td>
+                  <td className="px-5 py-4 text-right">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedInvoice(invoice)}
+                      className="font-semibold text-cospail-sky underline decoration-cospail-sky/40 underline-offset-4 transition hover:text-cospail-navy hover:decoration-cospail-navy focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cospail-sky/30 rounded"
+                    >
+                      Ver Factura
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
       <InvoiceViewerModal invoice={selectedInvoice} onClose={() => setSelectedInvoice(null)} />
