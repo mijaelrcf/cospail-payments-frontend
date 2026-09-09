@@ -46,6 +46,7 @@ export function PagoQrPage() {
 
   const toggleDebt = (item: DebtItem) => {
     setSelectionError(null)
+    setFlowError(null)
 
     const exists = selectedDebts.some((x) => x.creditNumber === item.creditNumber)
 
@@ -101,7 +102,10 @@ export function PagoQrPage() {
       // para mostrar el QR activo en lugar del formulario.
       await activeQrQuery.refetch()
       setFlowError(
-        getApiErrorMessage(error, 'No se pudo iniciar el pago. Inténtalo nuevamente.')
+        getApiErrorMessage(
+          error,
+          'Ocurrió un error al generar el QR. El servicio no está disponible en este momento. Por favor, inténtalo más tarde.'
+        )
       )
     }
   }
@@ -153,10 +157,17 @@ export function PagoQrPage() {
 
           <DebtList items={debtResponse.debts} selectedItems={selectedDebts} onToggle={toggleDebt} />
 
-          {(selectionError || flowError) && (
+          {selectionError && (
             <div className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
               <InfoIcon className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-              <p className="text-sm font-medium text-amber-800">{selectionError ?? flowError}</p>
+              <p className="text-sm font-medium text-amber-800">{selectionError}</p>
+            </div>
+          )}
+
+          {flowError && (
+            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
+              <InfoIcon className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+              <p className="text-sm font-medium text-red-700">{flowError}</p>
             </div>
           )}
 

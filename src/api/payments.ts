@@ -17,8 +17,37 @@ export async function getMemberDebtByDocument(fixedCode: number, documentId: str
 
 export function getApiErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof AxiosError) {
-    const detail = (error.response?.data as { detail?: string } | undefined)?.detail
-    if (detail) return detail
+    const status = error.response?.status
+    const data = error.response?.data as
+      | { detail?: string | null; message?: string | null; title?: string | null }
+      | undefined
+
+    const rawMessage = data?.detail ?? data?.message ?? data?.title
+
+    // El backend a veces devuelve mensajes técnicos/genéricos en inglés
+    // (ej. "An unexpected error ocurred." o Message: null cuando el banco falla).
+    // En esos casos mostramos el fallback amigable en español.
+    if (rawMessage) {
+      const normalized = rawMessage.trim().toLowerCase()
+      const isTechnical = [
+        'an unexpected error',
+        'unexpected error',
+        'ocurred',
+        'occurred',
+        'internal server error',
+        'server error',
+        'null',
+      ].some((fragment) => normalized.includes(fragment))
+
+      if (!isTechnical) return rawMessage.trim()
+    }
+
+    // Error de red (sin respuesta) o error 5xx: mensaje amigable.
+    if (!error.response || (status !== undefined && status >= 500)) {
+      return fallback
+    }
+
+    if (rawMessage?.trim()) return rawMessage.trim()
   }
   return fallback
 }
@@ -92,6 +121,7 @@ export async function getLast6MonthsInvoices(fixedCode: number): Promise<Invoice
   return response.data
 }
 
+// creditNumber es el IDCredito del reporte (se envía como NCredito al SOAP).
 export async function getInvoicePdf(creditNumber: number): Promise<InvoicePdf> {
   const response = await axiosClient.get(`/Cospail/invoices/${creditNumber}/pdf`)
   return response.data
