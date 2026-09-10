@@ -5,7 +5,7 @@ import { AppShell, BackButton } from '../components/app-shell'
 import { DebtList } from '../components/debt-list'
 import { CheckIcon, InfoIcon } from '../components/icons'
 import { PendingQrCard } from '../components/pending-qr-card'
-import { getApiErrorMessage } from '../api/payments'
+import { getApiErrorMessage, getMemberDebtByDocument } from '../api/payments'
 import { useActiveQr } from '../hooks/use-active-qr'
 import { useInitiatePayment } from '../hooks/use-initiate-payment'
 import { useGenerateQr } from '../hooks/use-generate-qr'
@@ -20,6 +20,7 @@ export function PagoQrPage() {
     debtResponse,
     selectedDebts,
     setSelectedDebts,
+    setDebtResponse,
     setQrResult,
     setInitiatedPayment,
   } = usePaymentStore()
@@ -74,6 +75,32 @@ export function PagoQrPage() {
     setSelectedDebts([])
   }
 
+  const handleGoMenu = () => {
+    navigate('/menu', { replace: true })
+  }
+
+  const handlePaid = () => {
+    setSelectedDebts([])
+
+    const fixedCode = debtResponse?.fixedCode
+    const documentId = debtResponse?.documentId
+    if (!fixedCode || !documentId) return
+
+    void (async () => {
+      try {
+        const fresh = await getMemberDebtByDocument(fixedCode, documentId)
+        setDebtResponse(fresh)
+        setSelectedDebts([])
+      } catch {
+        // Si el refetch falla, igual se limpió la selección.
+      } finally {
+        void queryClient.invalidateQueries({ queryKey: ['active-qr'] })
+        void queryClient.invalidateQueries({ queryKey: ['recent-payments'] })
+        void queryClient.invalidateQueries({ queryKey: ['invoices-last-6-months'] })
+      }
+    })()
+  }
+
   const handleGenerateQr = async () => {
     setFlowError(null)
 
@@ -96,7 +123,7 @@ export function PagoQrPage() {
 
       setQrResult(result)
       await queryClient.invalidateQueries({ queryKey: ['active-qr'] })
-      navigate('/qr-result')
+      navigate('/qr-result', { replace: true })
     } catch (error) {
       // Si el rechazo es por un QR ya pendiente, se recarga la validación
       // para mostrar el QR activo en lugar del formulario.
@@ -118,7 +145,7 @@ export function PagoQrPage() {
         <div>
           <h1 className="mt-1 font-display text-xl font-bold text-cospail-ink">Pago QR</h1>
         </div>
-        <BackButton onClick={() => navigate('/menu')} />
+        <BackButton onClick={handleGoMenu} />
       </div>
 
       {activeQrQuery.isFetching ? (
@@ -145,6 +172,8 @@ export function PagoQrPage() {
             amount={activeQr.amount}
             dueDate={activeQr.dueDate}
             onAnnulled={refreshDebtsAfterAnnul}
+            onPaid={handlePaid}
+            onGoMenu={handleGoMenu}
           />
         </>
       ) : debtResponse.debts.length ? (

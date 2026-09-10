@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getApiErrorMessage } from '../api/payments'
 import { useAnnulQr } from '../hooks/use-annul-qr'
 import { usePaymentStatus } from '../hooks/use-payment-status'
@@ -11,16 +11,30 @@ interface Props {
   amount: number
   dueDate?: string
   onAnnulled: () => void
+  onPaid?: () => void
+  onGoMenu?: () => void
 }
 
-export function PendingQrCard({ pagoCospailId, qrImage, amount, dueDate, onAnnulled }: Props) {
+export function PendingQrCard({ pagoCospailId, qrImage, amount, dueDate, onAnnulled, onPaid, onGoMenu }: Props) {
   const [confirmingAnnul, setConfirmingAnnul] = useState(false)
   const paymentStatusQuery = usePaymentStatus(pagoCospailId)
   const annulQrMutation = useAnnulQr()
+  const paidNotifiedRef = useRef(false)
 
   const status = paymentStatusQuery.data?.status ?? 0
   const isPaid = status === 2 || status === 3
   const isAnnulled = status === 4
+
+  useEffect(() => {
+    paidNotifiedRef.current = false
+  }, [pagoCospailId])
+
+  useEffect(() => {
+    if (isPaid && !paidNotifiedRef.current) {
+      paidNotifiedRef.current = true
+      onPaid?.()
+    }
+  }, [isPaid, onPaid])
 
   const handleAnnul = async () => {
     try {
@@ -44,6 +58,13 @@ export function PendingQrCard({ pagoCospailId, qrImage, amount, dueDate, onAnnul
           Tu pago de <span className="font-semibold text-cospail-green-dark">Bs {amount.toFixed(2)}</span> fue
           confirmado y está siendo registrado en Cospail.
         </p>
+        <button
+          type="button"
+          onClick={() => (onGoMenu ?? onAnnulled)()}
+          className="mt-6 rounded-xl bg-cospail-navy px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-cospail-navy-dark focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cospail-sky/40"
+        >
+          Volver al menú
+        </button>
       </div>
     )
   }

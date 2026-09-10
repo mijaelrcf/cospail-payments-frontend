@@ -1,12 +1,16 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { AppShell, BackButton } from '../components/app-shell'
 import { PendingQrCard } from '../components/pending-qr-card'
+import { getMemberDebtByDocument } from '../api/payments'
 import { usePaymentStore } from '../store/payment-store'
 
 export function QrResultPage() {
   const navigate = useNavigate()
-  const { qrResult, initiatedPayment, debtResponse, setInitiatedPayment } = usePaymentStore()
+  const queryClient = useQueryClient()
+  const { qrResult, initiatedPayment, debtResponse, setDebtResponse, setSelectedDebts, setInitiatedPayment } =
+    usePaymentStore()
 
   useEffect(() => {
     if (!qrResult || !initiatedPayment) {
@@ -18,7 +22,34 @@ export function QrResultPage() {
 
   const handleAnnulled = () => {
     setInitiatedPayment(null)
-    navigate('/menu')
+    navigate('/menu', { replace: true })
+  }
+
+  const handleGoMenu = () => {
+    navigate('/menu', { replace: true })
+  }
+
+  const handlePaid = () => {
+    setSelectedDebts([])
+
+    const fixedCode = debtResponse?.fixedCode
+    const documentId = debtResponse?.documentId
+    if (!fixedCode || !documentId) return
+
+    void (async () => {
+      try {
+        const fresh = await getMemberDebtByDocument(fixedCode, documentId)
+        setDebtResponse(fresh)
+        setSelectedDebts([])
+      } catch {
+        // Si el refetch falla, igual se limpió la selección; la próxima
+        // entrada a Pago QR mostrará el último estado conocido.
+      } finally {
+        void queryClient.invalidateQueries({ queryKey: ['active-qr'] })
+        void queryClient.invalidateQueries({ queryKey: ['recent-payments'] })
+        void queryClient.invalidateQueries({ queryKey: ['invoices-last-6-months'] })
+      }
+    })()
   }
 
   return (
@@ -27,7 +58,7 @@ export function QrResultPage() {
         <div>
           <h1 className="mt-1 font-display text-xl font-bold text-cospail-ink">Código QR</h1>
         </div>
-        <BackButton onClick={() => navigate('/menu')} />
+        <BackButton onClick={handleGoMenu} />
       </div>
 
       <div className="mb-6">
@@ -41,6 +72,8 @@ export function QrResultPage() {
         qrImage={qrResult.qrImage}
         amount={initiatedPayment.totalAmount}
         onAnnulled={handleAnnulled}
+        onPaid={handlePaid}
+        onGoMenu={handleGoMenu}
       />
     </AppShell>
   )

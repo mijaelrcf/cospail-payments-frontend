@@ -1,11 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { getRecentPayments } from '../api/payments'
 
-// Status: CospailRegistrado, QRGenerado, QREscaneado, QRPagado, QRRechazado
-// Use CospailRegistrado to get all payments paid, 
-// use QRGenerado to get only for test.
-// const DEFAULT_STATUS = 'CospailRegistrado' 
-const DEFAULT_STATUS = 'QRGenerado'
+// Status: CospailRegistrado, QRGenerado, QRPagado, QRRechazado
+// Use CospailRegistrado para obtener la deuda pagada (BanEco) y registrada (Cospail).
+// Use otro estado para probar.
+const DEFAULT_STATUS = 'CospailRegistrado' 
 
 export const useRecentPayments = (fixedCode: number | null | undefined) => {
   return useQuery({
