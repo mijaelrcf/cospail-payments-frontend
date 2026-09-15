@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
-import { DropletLogo } from './droplet-logo'
+import { BrandHeader } from './brand-header'
 import { Wave } from './wave'
-import { ArrowLeftIcon } from './icons'
+
+export { BackButton } from './back-button'
 
 interface AppShellProps {
   children: ReactNode
@@ -23,19 +24,7 @@ export function AppShell({ children, memberName, fixedCode }: AppShellProps) {
         />
 
         <div className="relative mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-3 px-6 pt-6 pb-9 sm:px-8">
-          <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20 backdrop-blur">
-              <DropletLogo className="h-6 w-6" />
-            </span>
-            <span>
-              <span className="block font-display text-lg font-semibold leading-tight text-white">
-                Cospail
-              </span>
-              <span className="block text-[11px] font-medium uppercase tracking-[0.18em] text-cospail-sky">
-                Cooperativa de Agua · R.L.
-              </span>
-            </span>
-          </div>
+          <BrandHeader />
 
           {memberName && (
             <div className="flex items-center gap-3 rounded-2xl bg-white/10 px-4 py-2 ring-1 ring-white/15 backdrop-blur">
@@ -43,9 +32,11 @@ export function AppShell({ children, memberName, fixedCode }: AppShellProps) {
                 <span className="block text-sm font-medium leading-tight text-white">
                   {memberName}
                 </span>
-                <span className="block font-mono text-xs text-cospail-sky">
-                  Código #{fixedCode}
-                </span>
+                {fixedCode != null && (
+                  <span className="block font-mono text-xs text-cospail-sky">
+                    Código #{fixedCode}
+                  </span>
+                )}
               </span>
             </div>
           )}
@@ -58,24 +49,5 @@ export function AppShell({ children, memberName, fixedCode }: AppShellProps) {
 
       <main className="mx-auto w-full max-w-5xl px-6 py-8 sm:px-8">{children}</main>
     </div>
-  )
-}
-
-interface BackButtonProps {
-  onClick: () => void
-  label?: string
-  className?: string
-}
-
-export function BackButton({ onClick, label = 'Volver al menú', className }: BackButtonProps) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`inline-flex items-center gap-2 rounded-xl border border-cospail-navy/15 bg-white px-4 py-2 text-sm font-medium text-cospail-navy shadow-sm transition hover:border-cospail-sky hover:bg-cospail-sky-tint focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cospail-sky/30 ${className ?? ''}`}
-    >
-      <ArrowLeftIcon className="h-4 w-4" />
-      {label}
-    </button>
   )
 }

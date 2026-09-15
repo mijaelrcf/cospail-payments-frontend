@@ -1,24 +1,17 @@
-import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useQueryClient } from '@tanstack/react-query'
 import { AppShell, BackButton } from '../components/app-shell'
 import { PendingQrCard } from '../components/pending-qr-card'
-import { getMemberDebtByDocument } from '../api/payments'
+import { PageHeader } from '../components/ui'
+import { useRefreshAfterPayment } from '../hooks/use-refresh-after-payment'
 import { usePaymentStore } from '../store/payment-store'
 
 export function QrResultPage() {
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
-  const { qrResult, initiatedPayment, debtResponse, setDebtResponse, setSelectedDebts, setInitiatedPayment } =
-    usePaymentStore()
-
-  useEffect(() => {
-    if (!qrResult || !initiatedPayment) {
-      navigate('/menu', { replace: true })
-    }
-  }, [qrResult, initiatedPayment, navigate])
-
-  if (!qrResult || !initiatedPayment) return null
+  const qrResult = usePaymentStore((s) => s.qrResult)
+  const initiatedPayment = usePaymentStore((s) => s.initiatedPayment)
+  const debtResponse = usePaymentStore((s) => s.debtResponse)
+  const setInitiatedPayment = usePaymentStore((s) => s.setInitiatedPayment)
+  const refreshAfterPayment = useRefreshAfterPayment()
 
   const handleAnnulled = () => {
     setInitiatedPayment(null)
@@ -30,36 +23,17 @@ export function QrResultPage() {
   }
 
   const handlePaid = () => {
-    setSelectedDebts([])
+    void refreshAfterPayment(debtResponse?.fixedCode, debtResponse?.documentId)
+  }
 
-    const fixedCode = debtResponse?.fixedCode
-    const documentId = debtResponse?.documentId
-    if (!fixedCode || !documentId) return
-
-    void (async () => {
-      try {
-        const fresh = await getMemberDebtByDocument(fixedCode, documentId)
-        setDebtResponse(fresh)
-        setSelectedDebts([])
-      } catch {
-        // Si el refetch falla, igual se limpió la selección; la próxima
-        // entrada a Pago QR mostrará el último estado conocido.
-      } finally {
-        void queryClient.invalidateQueries({ queryKey: ['active-qr'] })
-        void queryClient.invalidateQueries({ queryKey: ['recent-payments'] })
-        void queryClient.invalidateQueries({ queryKey: ['invoices-last-6-months'] })
-      }
-    })()
+  if (!qrResult || !initiatedPayment) {
+    navigate('/menu', { replace: true })
+    return null
   }
 
   return (
     <AppShell memberName={debtResponse?.memberName} fixedCode={debtResponse?.fixedCode}>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="mt-1 font-display text-xl font-bold text-cospail-ink">Código QR</h1>
-        </div>
-        <BackButton onClick={handleGoMenu} />
-      </div>
+      <PageHeader title="Código QR" action={<BackButton onClick={handleGoMenu} />} />
 
       <div className="mb-6">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cospail-navy/60">

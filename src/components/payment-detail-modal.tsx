@@ -1,4 +1,6 @@
 import { useEffect, useRef } from 'react'
+import type { RecentPaymentDebt } from '../types/recent-payment'
+import { formatCurrency } from '../utils/format'
 import { XIcon } from './icons'
 
 interface Props {
@@ -6,7 +8,7 @@ interface Props {
   onClose: () => void
   title: string
   totalAmount: number
-  debts: { creditNumber: number; period: string; amount: number }[]
+  debts: RecentPaymentDebt[]
 }
 
 export function PaymentDetailModal({ open, onClose, title, totalAmount, debts }: Props) {
@@ -17,8 +19,8 @@ export function PaymentDetailModal({ open, onClose, title, totalAmount, debts }:
     if (!dialog) return
 
     if (open) {
-      dialog.showModal()
-    } else {
+      if (!dialog.open) dialog.showModal()
+    } else if (dialog.open) {
       dialog.close()
     }
   }, [open])
@@ -29,11 +31,12 @@ export function PaymentDetailModal({ open, onClose, title, totalAmount, debts }:
       onClose={onClose}
       className="m-auto w-full max-w-lg rounded-3xl bg-white p-0 shadow-xl ring-1 ring-cospail-navy/10 backdrop:bg-cospail-ink/40 backdrop:backdrop-blur-sm sm:p-6"
     >
-      <form method="dialog">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-display text-lg font-bold text-cospail-ink">{title}</h2>
           <button
-            type="submit"
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar"
             className="flex h-8 w-8 items-center justify-center rounded-full text-cospail-ink/40 transition hover:bg-cospail-surface hover:text-cospail-ink"
           >
             <XIcon className="h-5 w-5" />
@@ -45,7 +48,7 @@ export function PaymentDetailModal({ open, onClose, title, totalAmount, debts }:
             Monto total
           </p>
           <p className="mt-1 font-display text-2xl font-bold text-cospail-navy">
-            Bs {totalAmount.toFixed(2)}
+            {formatCurrency(totalAmount)}
           </p>
         </div>
 
@@ -53,6 +56,9 @@ export function PaymentDetailModal({ open, onClose, title, totalAmount, debts }:
           Deudas incluidas ({debts.length})
         </p>
 
+        {debts.length === 0 ? (
+          <p className="text-sm text-cospail-ink/60">Este pago no tiene deudas asociadas.</p>
+        ) : (
         <ul className="max-h-60 space-y-2 overflow-y-auto">
           {debts.map((item) => (
             <li
@@ -69,21 +75,22 @@ export function PaymentDetailModal({ open, onClose, title, totalAmount, debts }:
                 </span>
               </span>
               <span className="shrink-0 font-display text-base font-bold text-cospail-navy">
-                Bs {item.amount.toFixed(2)}
+                {formatCurrency(item.amount)}
               </span>
             </li>
           ))}
         </ul>
+        )}
 
         <div className="mt-5 flex justify-end">
           <button
-            type="submit"
+            type="button"
+            onClick={onClose}
             className="rounded-xl bg-cospail-navy px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-cospail-navy-dark focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cospail-sky/40"
           >
             Cerrar
           </button>
         </div>
-      </form>
     </dialog>
   )
 }

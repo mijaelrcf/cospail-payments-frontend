@@ -1,14 +1,22 @@
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMemberDebt } from '../hooks/use-member-debt'
+import { getApiErrorMessage } from '../api/payments'
 import { usePaymentStore } from '../store/payment-store'
 import { MemberDebtStatus } from '../types/member-debt-response'
-import { DropletLogo } from '../components/droplet-logo'
+import { BrandHeader } from '../components/brand-header'
 import { AnimatedWave } from '../components/wave'
 import { CheckIcon } from '../components/icons'
+import { ErrorBox } from '../components/ui'
 
 const inputClasses =
   'w-full rounded-xl border border-cospail-navy/20 bg-white px-4 py-3 text-sm text-cospail-ink shadow-sm outline-none transition placeholder:text-cospail-ink/35 focus:border-cospail-sky focus:ring-4 focus:ring-cospail-sky/20'
+
+const LOGIN_BENEFITS = [
+  'Sin filas ni horarios',
+  'Paga desde tu banca móvil',
+  'Consulta tu historial de facturas',
+]
 
 export function LoginPage() {
   const [fixedCode, setFixedCode] = useState('')
@@ -23,14 +31,25 @@ export function LoginPage() {
     setDocumentId: setStoreDocumentId,
   } = usePaymentStore()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
 
+    const trimmedDocument = documentId.trim()
+    const parsedCode = Number(fixedCode)
+    if (!Number.isInteger(parsedCode) || parsedCode <= 0) {
+      setError('Ingresa un código fijo válido.')
+      return
+    }
+    if (!trimmedDocument) {
+      setError('Ingresa tu documento de identidad.')
+      return
+    }
+
     try {
       const result = await memberDebtMutation.mutateAsync({
-        fixedCode: Number(fixedCode),
-        documentId,
+        fixedCode: parsedCode,
+        documentId: trimmedDocument,
       })
 
       if (result.status === MemberDebtStatus.DocumentMismatch) {
@@ -47,8 +66,10 @@ export function LoginPage() {
       setStoreDocumentId(result.documentId)
       setDebtResponse(result)
       navigate('/menu')
-    } catch {
-      setError('No se pudo conectar con el servicio. Inténtalo nuevamente.')
+    } catch (error) {
+      setError(
+        getApiErrorMessage(error, 'No se pudo conectar con el servicio. Inténtalo nuevamente.')
+      )
     }
   }
 
@@ -67,19 +88,7 @@ export function LoginPage() {
             />
 
             <div className="relative">
-              <div className="flex items-center gap-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20 backdrop-blur">
-                  <DropletLogo className="h-6 w-6" />
-                </span>
-                <span>
-                  <span className="block font-display text-lg font-semibold leading-tight text-white">
-                    Cospail
-                  </span>
-                  <span className="block text-[11px] font-medium uppercase tracking-[0.18em] text-cospail-sky">
-                    Cooperativa de Agua · R.L.
-                  </span>
-                </span>
-              </div>
+              <BrandHeader />
 
               <div className="mt-12 space-y-3">
                 <h1 className="font-display text-2xl font-bold leading-snug text-white">
@@ -88,11 +97,7 @@ export function LoginPage() {
                   más simples.
                 </h1>
                 <ul className="space-y-2.5">
-                  {[
-                    'Sin filas ni horarios',
-                    'Paga desde tu banca móvil',
-                    'Consulta tu historial de facturas',
-                  ].map((item) => (
+                  {LOGIN_BENEFITS.map((item) => (
                     <li key={item} className="flex items-center gap-2.5 text-sm text-white/80">
                       <span className="flex h-5 w-5 items-center justify-center rounded-full bg-cospail-green/90 text-white">
                         <CheckIcon className="h-3 w-3" strokeWidth={3} />
@@ -153,9 +158,7 @@ export function LoginPage() {
                 </div>
 
                 {error && (
-                  <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                    {error}
-                  </p>
+                  <ErrorBox message={error} />
                 )}
 
                 <button

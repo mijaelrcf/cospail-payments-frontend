@@ -36,10 +36,12 @@ export function getApiErrorMessage(error: unknown, fallback: string): string {
         'occurred',
         'internal server error',
         'server error',
-        'null',
       ].some((fragment) => normalized.includes(fragment))
 
-      if (!isTechnical) return rawMessage.trim()
+      // Mensaje nulo literal del backend (Message: null) también es técnico.
+      const isNullLiteral = normalized === 'null'
+
+      if (!isTechnical && !isNullLiteral) return rawMessage.trim()
     }
 
     // Error de red (sin respuesta) o error 5xx: mensaje amigable.
@@ -109,7 +111,7 @@ export async function getPaymentStatus(pagoCospailId: string): Promise<PagoCospa
 
 export async function getRecentPayments(fixedCode: number, status?: string): Promise<RecentPayment[]> {
   const response = await axiosClient.get('/Cospail/payments/recent', {
-    params: { fixedCode, ...(status !== undefined && { status }) },
+    params: status === undefined ? { fixedCode } : { fixedCode, status },
   })
   return response.data
 }

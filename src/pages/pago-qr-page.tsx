@@ -1,29 +1,33 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { AppShell, BackButton } from '../components/app-shell'
 import { DebtList } from '../components/debt-list'
+import { EmptyState } from '../components/empty-state'
 import { CheckIcon, InfoIcon } from '../components/icons'
 import { PendingQrCard } from '../components/pending-qr-card'
-import { getApiErrorMessage, getMemberDebtByDocument } from '../api/payments'
+import { ErrorBox, LoadingState, PageHeader } from '../components/ui'
+import { getApiErrorMessage } from '../api/payments'
 import { useActiveQr } from '../hooks/use-active-qr'
 import { useInitiatePayment } from '../hooks/use-initiate-payment'
 import { useGenerateQr } from '../hooks/use-generate-qr'
+import { useRefreshAfterPayment } from '../hooks/use-refresh-after-payment'
+import { useRequireAuth } from '../hooks/use-require-auth'
 import { usePaymentStore } from '../store/payment-store'
+import { formatCurrency } from '../utils/format'
+import { queryKeys } from '../utils/query-keys'
 import type { DebtItem } from '../types/debt-item'
 
 const isOlder = (a: DebtItem, b: DebtItem) =>
   a.year < b.year || (a.year === b.year && a.month < b.month)
 
 export function PagoQrPage() {
-  const {
-    debtResponse,
-    selectedDebts,
-    setSelectedDebts,
-    setDebtResponse,
-    setQrResult,
-    setInitiatedPayment,
-  } = usePaymentStore()
+  const debtResponse = useRequireAuth()
+  const selectedDebts = usePaymentStore((s) => s.selectedDebts)
+  const setSelectedDebts = usePaymentStore((s) => s.setSelectedDebts)
+  const setDebtResponse = usePaymentStore((s) => s.setDebtResponse)
+  const setQrResult = usePaymentStore((s) => s.setQrResult)
+  const setInitiatedPayment = usePaymentStore((s) => s.setInitiatedPayment)
 
   const [selectionError, setSelectionError] = useState<string | null>(null)
   const [flowError, setFlowError] = useState<string | null>(null)
@@ -32,26 +36,19 @@ export function PagoQrPage() {
   const queryClient = useQueryClient()
   const initiatePaymentMutation = useInitiatePayment()
   const generateQrMutation = useGenerateQr()
+  const refreshAfterPayment = useRefreshAfterPayment()
 
   const activeQrQuery = useActiveQr(debtResponse?.fixedCode, debtResponse?.documentId)
 
-  useEffect(() => {
-    if (!debtResponse) {
-      navigate('/', { replace: true })
-    }
-  }, [debtResponse, navigate])
-
-  if (!debtResponse || !activeQrQuery.isSuccess) return null
-
-  const activeQr = activeQrQuery.data
-
   const toggleDebt = (item: DebtItem) => {
+    if (!debtResponse) return
     setSelectionError(null)
     setFlowError(null)
 
     const exists = selectedDebts.some((x) => x.creditNumber === item.creditNumber)
 
     if (exists) {
+      // Al quitar una deuda también se quitan las más nuevas (pago en orden).
       setSelectedDebts(selectedDebts.filter((x) => isOlder(x, item)))
       return
     }
@@ -71,7 +68,7 @@ export function PagoQrPage() {
   }
 
   const refreshDebtsAfterAnnul = () => {
-    void queryClient.invalidateQueries({ queryKey: ['active-qr'] })
+    void queryClient.invalidateQueries({ queryKey: queryKeys.activeQrRoot })
     setSelectedDebts([])
   }
 
@@ -80,28 +77,11 @@ export function PagoQrPage() {
   }
 
   const handlePaid = () => {
-    setSelectedDebts([])
-
-    const fixedCode = debtResponse?.fixedCode
-    const documentId = debtResponse?.documentId
-    if (!fixedCode || !documentId) return
-
-    void (async () => {
-      try {
-        const fresh = await getMemberDebtByDocument(fixedCode, documentId)
-        setDebtResponse(fresh)
-        setSelectedDebts([])
-      } catch {
-        // Si el refetch falla, igual se limpió la selección.
-      } finally {
-        void queryClient.invalidateQueries({ queryKey: ['active-qr'] })
-        void queryClient.invalidateQueries({ queryKey: ['recent-payments'] })
-        void queryClient.invalidateQueries({ queryKey: ['invoices-last-6-months'] })
-      }
-    })()
+    void refreshAfterPayment(debtResponse?.fixedCode, debtResponse?.documentId)
   }
 
   const handleGenerateQr = async () => {
+    if (!debtResponse) return
     setFlowError(null)
 
     try {
@@ -122,7 +102,8 @@ export function PagoQrPage() {
       })
 
       setQrResult(result)
-      await queryClient.invalidateQueries({ queryKey: ['active-qr'] })
+      setDebtResponse(debtResponse)
+      await queryClient.invalidateQueries({ queryKey: queryKeys.activeQrRoot })
       navigate('/qr-result', { replace: true })
     } catch (error) {
       // Si el rechazo es por un QR ya pendiente, se recarga la validación
@@ -137,24 +118,17 @@ export function PagoQrPage() {
     }
   }
 
+  if (!debtResponse || !activeQrQuery.isSuccess) return null
+
+  const activeQr = activeQrQuery.data
   const total = selectedDebts.reduce((sum, item) => sum + item.amount, 0)
 
   return (
     <AppShell memberName={debtResponse.memberName} fixedCode={debtResponse.fixedCode}>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="mt-1 font-display text-xl font-bold text-cospail-ink">Pago QR</h1>
-        </div>
-        <BackButton onClick={handleGoMenu} />
-      </div>
+      <PageHeader title="Pago QR" action={<BackButton onClick={handleGoMenu} />} />
 
       {activeQrQuery.isFetching ? (
-        <div className="flex flex-col items-center rounded-3xl bg-white px-6 py-16 text-center shadow-sm ring-1 ring-cospail-navy/5">
-          <span className="h-8 w-8 animate-spin rounded-full border-4 border-cospail-sky border-t-transparent" />
-          <p className="mt-4 text-sm font-medium text-cospail-ink/60">
-            Verificando pagos pendientes…
-          </p>
-        </div>
+        <LoadingState message="Verificando pagos pendientes…" />
       ) : activeQr ? (
         <>
           <div className="mb-6">
@@ -194,9 +168,8 @@ export function PagoQrPage() {
           )}
 
           {flowError && (
-            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
-              <InfoIcon className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
-              <p className="text-sm font-medium text-red-700">{flowError}</p>
+            <div className="mt-4">
+              <ErrorBox message={flowError} />
             </div>
           )}
 
@@ -206,7 +179,7 @@ export function PagoQrPage() {
                 Total seleccionado
               </p>
               <p className="font-display text-2xl font-bold text-cospail-ink">
-                Bs {total.toFixed(2)}
+                {formatCurrency(total)}
               </p>
             </div>
             <button
@@ -228,17 +201,12 @@ export function PagoQrPage() {
           </div>
         </>
       ) : (
-        <div className="flex flex-col items-center rounded-3xl border border-dashed border-cospail-navy/20 bg-white/70 px-6 py-16 text-center shadow-sm">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cospail-green-tint text-cospail-green-dark">
-            <CheckIcon className="h-7 w-7" />
-          </span>
-          <h2 className="mt-4 font-display text-xl font-semibold text-cospail-ink">
-            No tienes deudas pendientes
-          </h2>
-          <p className="mt-1 max-w-sm text-sm text-cospail-ink/60">
-            Tu cuenta de agua está al día. ¡Gracias por cumplir con tu cooperativa!
-          </p>
-        </div>
+        <EmptyState
+          icon={CheckIcon}
+          title="No tienes deudas pendientes"
+          description="Tu cuenta de agua está al día. ¡Gracias por cumplir con tu cooperativa!"
+          onBack={handleGoMenu}
+        />
       )}
     </AppShell>
   )

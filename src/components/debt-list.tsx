@@ -1,4 +1,6 @@
+import { useMemo } from 'react'
 import type { DebtItem } from '../types/debt-item'
+import { formatCurrency } from '../utils/format'
 import { CheckIcon } from './icons'
 
 interface Props {
@@ -8,15 +10,17 @@ interface Props {
 }
 
 export function DebtList({ items, selectedItems, onToggle }: Props) {
-  const isSelected = (item: DebtItem) =>
-    selectedItems.some((x) => x.creditNumber === item.creditNumber)
+  const selectedKeys = useMemo(
+    () => new Set(selectedItems.map((x) => x.creditNumber)),
+    [selectedItems]
+  )
 
   return (
     <ul className="space-y-3">
       {items.map((item) => {
-        const selected = isSelected(item)
+        const selected = selectedKeys.has(item.creditNumber)
         return (
-          <li key={item.creditNumber}>
+          <li key={`${item.creditNumber}-${item.year}-${item.month}`}>
             <label
               className={`group flex cursor-pointer items-center justify-between gap-4 rounded-2xl border bg-white p-4 shadow-sm transition focus-within:ring-4 focus-within:ring-cospail-sky/25 ${
                 selected
@@ -53,7 +57,7 @@ export function DebtList({ items, selectedItems, onToggle }: Props) {
               </span>
               <span className="shrink-0 text-right">
                 <span className="block font-display text-lg font-bold text-cospail-navy">
-                  Bs {item.amount.toFixed(2)}
+                  {formatCurrency(item.amount)}
                 </span>
               </span>
             </label>

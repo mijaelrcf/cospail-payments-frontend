@@ -1,5 +1,6 @@
-import { ArrowRightIcon } from './icons'
+import { ArrowRightIcon, ReceiptIcon } from './icons'
 import type { RecentPayment } from '../types/recent-payment'
+import { formatCurrency } from '../utils/format'
 
 interface Props {
   payment: RecentPayment
@@ -16,21 +17,7 @@ export function PaymentCard({ payment, onClick }: Props) {
       >
         <span className="flex items-center gap-4">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cospail-sky-tint text-cospail-navy">
-            <svg
-              viewBox="0 0 24 24"
-              width={20}
-              height={20}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.8}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" />
-              <path d="M14 8H8" />
-              <path d="M16 12H8" />
-              <path d="M13 16H8" />
-            </svg>
+            <ReceiptIcon width={20} height={20} />
           </span>
           <span className="text-left">
             <span className="block font-semibold text-cospail-ink">Pago QR</span>
@@ -42,7 +29,7 @@ export function PaymentCard({ payment, onClick }: Props) {
         <span className="flex items-center gap-3">
           <span className="text-right">
             <span className="block font-display text-lg font-bold text-cospail-navy">
-              Bs {payment.totalAmount.toFixed(2)}
+              {formatCurrency(payment.totalAmount)}
             </span>
           </span>
           <ArrowRightIcon className="h-5 w-5 text-cospail-ink/30 transition group-hover:text-cospail-sky" />

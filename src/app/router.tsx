@@ -5,6 +5,7 @@ import { PagoQrPage } from '../pages/pago-qr-page'
 import { QrResultPage } from '../pages/qr-result-page'
 import { VerPagosQrPage } from '../pages/ver-pagos-qr-page'
 import { FacturasPage } from '../pages/facturas-page'
+import { NotFoundPage } from '../pages/not-found-page'
 
 export const router = createBrowserRouter([
   { path: '/', element: <LoginPage /> },
@@ -13,4 +14,5 @@ export const router = createBrowserRouter([
   { path: '/qr-result', element: <QrResultPage /> },
   { path: '/ver-pagos-qr', element: <VerPagosQrPage /> },
   { path: '/facturas', element: <FacturasPage /> },
+  { path: '*', element: <NotFoundPage /> },
 ])

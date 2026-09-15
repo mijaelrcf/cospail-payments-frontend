@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useInvoicePdf } from '../hooks/use-invoices'
-import { InfoIcon, XIcon } from './icons'
+import { formatCurrency } from '../utils/format'
+import { XIcon } from './icons'
+import { ErrorBox, LoadingState } from './ui'
 import type { InvoiceSummary } from '../types/invoice'
 
 interface Props {
@@ -10,11 +12,17 @@ interface Props {
 
 function base64ToBlobUrl(base64: string, contentType: string): string {
   const binary = atob(base64)
-  const bytes = new Uint8Array(binary.length)
-  for (let i = 0; i < binary.length; i += 1) {
-    bytes[i] = binary.charCodeAt(i)
+  const chunkSize = 8192
+  const chunks: BlobPart[] = []
+  for (let i = 0; i < binary.length; i += chunkSize) {
+    const chunk = binary.slice(i, i + chunkSize)
+    const bytes = new Uint8Array(chunk.length)
+    for (let j = 0; j < chunk.length; j += 1) {
+      bytes[j] = chunk.charCodeAt(j)
+    }
+    chunks.push(bytes)
   }
-  return URL.createObjectURL(new Blob([bytes], { type: contentType }))
+  return URL.createObjectURL(new Blob(chunks, { type: contentType }))
 }
 
 export function InvoiceViewerModal({ invoice, onClose }: Props) {
@@ -43,19 +51,14 @@ export function InvoiceViewerModal({ invoice, onClose }: Props) {
     if (!dialog) return
     if (invoice) {
       if (!dialog.open) dialog.showModal()
-    } else {
+    } else if (dialog.open) {
       dialog.close()
     }
-  }, [invoice])
+  }, [invoice, onClose])
 
   const handlePrint = () => {
-    const iframe = iframeRef.current
-    if (iframe?.contentWindow) {
-      iframe.contentWindow.focus()
-      iframe.contentWindow.print()
-    } else {
-      window.print()
-    }
+    iframeRef.current?.contentWindow?.focus()
+    iframeRef.current?.contentWindow?.print()
   }
 
   return (
@@ -73,7 +76,7 @@ export function InvoiceViewerModal({ invoice, onClose }: Props) {
             <p className="mt-0.5 text-xs text-cospail-ink/60">
               Crédito{' '}
               <span className="font-mono font-medium text-cospail-navy">{invoice.creditNumber}</span>
-              {' · '}Bs {invoice.amount.toFixed(2)}
+              {' · '}{formatCurrency(invoice.amount)}
             </p>
           )}
         </div>
@@ -88,17 +91,9 @@ export function InvoiceViewerModal({ invoice, onClose }: Props) {
       </div>
 
       {pdfQuery.isLoading ? (
-        <div className="flex flex-col items-center rounded-2xl bg-cospail-surface px-6 py-16 text-center">
-          <span className="h-8 w-8 animate-spin rounded-full border-4 border-cospail-sky border-t-transparent" />
-          <p className="mt-4 text-sm font-medium text-cospail-ink/60">Cargando factura…</p>
-        </div>
+        <LoadingState message="Cargando factura…" />
       ) : pdfQuery.isError || !pdfQuery.data || !blobUrl ? (
-        <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
-          <InfoIcon className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
-          <p className="text-sm font-medium text-red-700">
-            No se pudo cargar la factura. Inténtalo nuevamente.
-          </p>
-        </div>
+        <ErrorBox message="No se pudo cargar la factura. Inténtalo nuevamente." />
       ) : (
         <>
           <iframe

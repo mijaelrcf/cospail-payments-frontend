@@ -2,8 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { getApiErrorMessage } from '../api/payments'
 import { useAnnulQr } from '../hooks/use-annul-qr'
 import { usePaymentStatus } from '../hooks/use-payment-status'
-import { CheckIcon, ClockIcon, InfoIcon, XIcon } from './icons'
+import { isAnnulledStatus, isPaidStatus } from '../types/payment-status'
+import { formatCurrency } from '../utils/format'
+import { CheckIcon, ClockIcon, XIcon } from './icons'
 import { QrViewer } from './qr-viewer'
+import { ErrorBox, NavyButton } from './ui'
 
 interface Props {
   pagoCospailId: string
@@ -22,8 +25,8 @@ export function PendingQrCard({ pagoCospailId, qrImage, amount, dueDate, onAnnul
   const paidNotifiedRef = useRef(false)
 
   const status = paymentStatusQuery.data?.status ?? 0
-  const isPaid = status === 2 || status === 3
-  const isAnnulled = status === 4
+  const isPaid = isPaidStatus(status)
+  const isAnnulled = isAnnulledStatus(status)
 
   useEffect(() => {
     paidNotifiedRef.current = false
@@ -55,16 +58,12 @@ export function PendingQrCard({ pagoCospailId, qrImage, amount, dueDate, onAnnul
           ¡Pago recibido!
         </h2>
         <p className="mt-1 max-w-sm text-sm text-cospail-ink/60">
-          Tu pago de <span className="font-semibold text-cospail-green-dark">Bs {amount.toFixed(2)}</span> fue
+          Tu pago de <span className="font-semibold text-cospail-green-dark">{formatCurrency(amount)}</span> fue
           confirmado y está siendo registrado en Cospail.
         </p>
-        <button
-          type="button"
-          onClick={() => (onGoMenu ?? onAnnulled)()}
-          className="mt-6 rounded-xl bg-cospail-navy px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-cospail-navy-dark focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cospail-sky/40"
-        >
+        <NavyButton onClick={() => (onGoMenu ?? onAnnulled)()} className="mt-6">
           Volver al menú
-        </button>
+        </NavyButton>
       </div>
     )
   }
@@ -81,13 +80,9 @@ export function PendingQrCard({ pagoCospailId, qrImage, amount, dueDate, onAnnul
         <p className="mt-1 max-w-sm text-sm text-cospail-ink/60">
           Este código QR fue anulado y ya no puede pagarse. Puedes iniciar un nuevo pago desde el menú.
         </p>
-        <button
-          type="button"
-          onClick={onAnnulled}
-          className="mt-6 rounded-xl bg-cospail-navy px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-cospail-navy-dark focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cospail-sky/40"
-        >
+        <NavyButton onClick={onAnnulled} className="mt-6">
           Volver al menú
-        </button>
+        </NavyButton>
       </div>
     )
   }
@@ -110,7 +105,7 @@ export function PendingQrCard({ pagoCospailId, qrImage, amount, dueDate, onAnnul
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-cospail-ink/50">
               Monto a pagar
             </p>
-            <p className="font-display text-2xl font-bold text-cospail-ink">Bs {amount.toFixed(2)}</p>
+            <p className="font-display text-2xl font-bold text-cospail-ink">{formatCurrency(amount)}</p>
           </div>
           {dueDate && (
             <div className="text-right">
@@ -166,11 +161,10 @@ export function PendingQrCard({ pagoCospailId, qrImage, amount, dueDate, onAnnul
         )}
 
         {annulQrMutation.isError && (
-          <div className="mt-4 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-            <InfoIcon className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
-            <p className="text-sm font-medium text-red-700">
-              {getApiErrorMessage(annulQrMutation.error, 'No se pudo anular el QR. Inténtalo nuevamente.')}
-            </p>
+          <div className="mt-4">
+            <ErrorBox
+              message={getApiErrorMessage(annulQrMutation.error, 'No se pudo anular el QR. Inténtalo nuevamente.')}
+            />
           </div>
         )}
       </div>

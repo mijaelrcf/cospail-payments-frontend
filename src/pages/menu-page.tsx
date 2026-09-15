@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { usePaymentStore } from '../store/payment-store'
+import { useRequireAuth } from '../hooks/use-require-auth'
 import { AppShell } from '../components/app-shell'
 import { QrIcon, HistoryIcon, ReceiptIcon, LogoutIcon, ArrowRightIcon } from '../components/icons'
 import type { ComponentType, SVGProps } from 'react'
@@ -15,13 +15,8 @@ interface MenuOption {
 
 export function MenuPage() {
   const navigate = useNavigate()
-  const { debtResponse, clearAll } = usePaymentStore()
-
-  useEffect(() => {
-    if (!debtResponse) {
-      navigate('/', { replace: true })
-    }
-  }, [debtResponse, navigate])
+  const debtResponse = useRequireAuth()
+  const clearAll = usePaymentStore((s) => s.clearAll)
 
   if (!debtResponse) return null
 

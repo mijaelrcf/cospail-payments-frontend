@@ -1,32 +1,20 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AppShell, BackButton } from '../components/app-shell'
 import { EmptyState } from '../components/empty-state'
-import { InfoIcon, ReceiptIcon } from '../components/icons'
+import { ReceiptIcon } from '../components/icons'
 import { InvoiceViewerModal } from '../components/invoice-viewer-modal'
+import { ErrorBox, LoadingState } from '../components/ui'
 import { useInvoices } from '../hooks/use-invoices'
-import { usePaymentStore } from '../store/payment-store'
+import { useRequireAuth } from '../hooks/use-require-auth'
+import { formatCurrency, formatMonth } from '../utils/format'
 import type { InvoiceSummary } from '../types/invoice'
-
-function formatMonth(value: string | null): string {
-  if (!value) return '—'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  const formatted = date.toLocaleDateString('es-BO', { month: 'long', year: 'numeric' })
-  return formatted.charAt(0).toUpperCase() + formatted.slice(1)
-}
 
 export function FacturasPage() {
   const navigate = useNavigate()
-  const { debtResponse } = usePaymentStore()
+  const debtResponse = useRequireAuth()
   const invoicesQuery = useInvoices(debtResponse?.fixedCode)
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceSummary | null>(null)
-
-  useEffect(() => {
-    if (!debtResponse) {
-      navigate('/', { replace: true })
-    }
-  }, [debtResponse, navigate])
 
   const sortedInvoices = useMemo(() => {
     const list = [...(invoicesQuery.data ?? [])]
@@ -58,17 +46,9 @@ export function FacturasPage() {
       </div>
 
       {invoicesQuery.isLoading ? (
-        <div className="flex flex-col items-center rounded-3xl bg-white px-6 py-16 text-center shadow-sm ring-1 ring-cospail-navy/5">
-          <span className="h-8 w-8 animate-spin rounded-full border-4 border-cospail-sky border-t-transparent" />
-          <p className="mt-4 text-sm font-medium text-cospail-ink/60">Cargando facturas…</p>
-        </div>
+        <LoadingState message="Cargando facturas…" />
       ) : invoicesQuery.isError ? (
-        <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3">
-          <InfoIcon className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
-          <p className="text-sm font-medium text-red-700">
-            No se pudieron cargar las facturas. Inténtalo nuevamente.
-          </p>
-        </div>
+        <ErrorBox message="No se pudieron cargar las facturas. Inténtalo nuevamente." />
       ) : invoices.length === 0 ? (
         <EmptyState
           icon={ReceiptIcon}
@@ -102,7 +82,7 @@ export function FacturasPage() {
                     {formatMonth(invoice.chargeDate)}
                   </td>
                   <td className="px-5 py-4 text-right font-display font-bold text-cospail-navy">
-                    Bs {invoice.amount.toFixed(2)}
+                    {formatCurrency(invoice.amount)}
                   </td>
                   <td className="px-5 py-4 text-right">
                     <button
