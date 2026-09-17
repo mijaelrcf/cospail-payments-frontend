@@ -10,6 +10,16 @@ export function LoadingState({ message }: { message: string }) {
   )
 }
 
+export function FullscreenLoading({ message }: { message: string }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-cospail-ink/45 p-6 backdrop-blur-[2px]">
+      <div className="flex flex-col items-center rounded-3xl bg-white px-10 py-8 text-center shadow-xl ring-1 ring-cospail-navy/10">
+        <span className="h-10 w-10 animate-spin rounded-full border-4 border-cospail-sky border-t-transparent" />
+        <p className="mt-4 text-sm font-medium text-cospail-ink/70">{message}</p>
+      </div>
+    </div>
+  )
+}
 export function ErrorBox({ message }: { message: string }) {
   return (
     <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3">

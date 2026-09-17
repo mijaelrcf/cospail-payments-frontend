@@ -6,7 +6,7 @@ import { isAnnulledStatus, isPaidStatus } from '../types/payment-status'
 import { formatCurrency } from '../utils/format'
 import { CheckIcon, ClockIcon, XIcon } from './icons'
 import { QrViewer } from './qr-viewer'
-import { ErrorBox, NavyButton } from './ui'
+import { ErrorBox, FullscreenLoading, NavyButton } from './ui'
 
 interface Props {
   pagoCospailId: string
@@ -88,6 +88,7 @@ export function PendingQrCard({ pagoCospailId, qrImage, amount, dueDate, onAnnul
   }
 
   return (
+    <>
     <div className="space-y-4">
       {qrImage ? (
         <QrViewer qrBase64={qrImage} />
@@ -169,5 +170,7 @@ export function PendingQrCard({ pagoCospailId, qrImage, amount, dueDate, onAnnul
         )}
       </div>
     </div>
+      {annulQrMutation.isPending && <FullscreenLoading message="Anulando QR…" />}
+    </>
   )
 }

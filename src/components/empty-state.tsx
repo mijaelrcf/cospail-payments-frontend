@@ -6,9 +6,10 @@ interface Props {
   title: string
   description: string
   onBack: () => void
+  backLabel?: string
 }
 
-export function EmptyState({ icon: Icon, title, description, onBack }: Props) {
+export function EmptyState({ icon: Icon, title, description, onBack, backLabel }: Props) {
   return (
     <div className="flex flex-col items-center rounded-3xl border border-dashed border-cospail-navy/20 bg-white/70 px-6 py-16 text-center shadow-sm">
       <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cospail-sky-tint text-cospail-navy">
@@ -16,7 +17,7 @@ export function EmptyState({ icon: Icon, title, description, onBack }: Props) {
       </span>
       <h2 className="mt-4 font-display text-xl font-semibold text-cospail-ink">{title}</h2>
       <p className="mt-1 max-w-sm text-sm text-cospail-ink/60">{description}</p>
-      <BackButton onClick={onBack} className="mt-6" />
+      <BackButton onClick={onBack} label={backLabel} className="mt-6" />
     </div>
   )
 }

@@ -11,6 +11,7 @@ export function NotFoundPage() {
         title="Página no encontrada"
         description="La ruta que buscas no existe."
         onBack={() => navigate('/', { replace: true })}
+        backLabel="Volver al inicio"
       />
     </div>
   )

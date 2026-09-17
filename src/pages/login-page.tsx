@@ -164,8 +164,11 @@ export function LoginPage() {
                 <button
                   type="submit"
                   disabled={memberDebtMutation.isPending}
-                  className="w-full rounded-xl bg-cospail-navy px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-cospail-navy-dark focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cospail-sky/40 disabled:opacity-50"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-cospail-navy px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-cospail-navy-dark focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cospail-sky/40 disabled:opacity-50"
                 >
+                  {memberDebtMutation.isPending && (
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                  )}
                   {memberDebtMutation.isPending ? 'Ingresando…' : 'Ingresar'}
                 </button>
               </form>

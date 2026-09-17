@@ -6,7 +6,7 @@ import { DebtList } from '../components/debt-list'
 import { EmptyState } from '../components/empty-state'
 import { CheckIcon, InfoIcon } from '../components/icons'
 import { PendingQrCard } from '../components/pending-qr-card'
-import { ErrorBox, LoadingState, PageHeader } from '../components/ui'
+import { ErrorBox, FullscreenLoading, LoadingState, PageHeader } from '../components/ui'
 import { getApiErrorMessage } from '../api/payments'
 import { useActiveQr } from '../hooks/use-active-qr'
 import { useInitiatePayment } from '../hooks/use-initiate-payment'
@@ -122,6 +122,8 @@ export function PagoQrPage() {
 
   const activeQr = activeQrQuery.data
   const total = selectedDebts.reduce((sum, item) => sum + item.amount, 0)
+  const isGenerating = initiatePaymentMutation.isPending || generateQrMutation.isPending
+  const generatingMessage = initiatePaymentMutation.isPending ? 'Registrando pago…' : 'Generando QR…'
 
   return (
     <AppShell memberName={debtResponse.memberName} fixedCode={debtResponse.fixedCode}>
@@ -190,8 +192,11 @@ export function PagoQrPage() {
                 initiatePaymentMutation.isPending ||
                 generateQrMutation.isPending
               }
-              className="rounded-xl bg-cospail-green px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-cospail-green-dark focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cospail-green/30 disabled:opacity-50"
+              className="flex items-center justify-center gap-2 rounded-xl bg-cospail-green px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-cospail-green-dark focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cospail-green/30 disabled:opacity-50"
             >
+              {isGenerating && (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+              )}
               {initiatePaymentMutation.isPending
                 ? 'Registrando pago…'
                 : generateQrMutation.isPending
@@ -208,6 +213,8 @@ export function PagoQrPage() {
           onBack={handleGoMenu}
         />
       )}
+
+      {isGenerating && <FullscreenLoading message={generatingMessage} />}
     </AppShell>
   )
 }
