@@ -42,6 +42,7 @@ export function VerPagosQrPage() {
           title="Sin pagos registrados"
           description="Aún no has realizado ningún pago QR. Cuando generes uno, aparecerá aquí."
           onBack={() => navigate('/menu')}
+          showBackButton={false}
         />
       ) : (
         <ul className="space-y-3">

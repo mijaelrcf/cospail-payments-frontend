@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom'
 import { AppShell, BackButton } from '../components/app-shell'
-import { PendingQrCard } from '../components/pending-qr-card'
+import { GeneratedQrCard } from '../components/generated-qr-card'
 import { PageHeader } from '../components/ui'
+import { useExitQrFlow } from '../hooks/use-exit-qr-flow'
 import { useRefreshAfterPayment } from '../hooks/use-refresh-after-payment'
 import { usePaymentStore } from '../store/payment-store'
 
@@ -10,17 +11,8 @@ export function QrResultPage() {
   const qrResult = usePaymentStore((s) => s.qrResult)
   const initiatedPayment = usePaymentStore((s) => s.initiatedPayment)
   const debtResponse = usePaymentStore((s) => s.debtResponse)
-  const setInitiatedPayment = usePaymentStore((s) => s.setInitiatedPayment)
   const refreshAfterPayment = useRefreshAfterPayment()
-
-  const handleAnnulled = () => {
-    setInitiatedPayment(null)
-    navigate('/menu', { replace: true })
-  }
-
-  const handleGoMenu = () => {
-    navigate('/menu', { replace: true })
-  }
+  const exitQrFlow = useExitQrFlow()
 
   const handlePaid = () => {
     void refreshAfterPayment(debtResponse?.fixedCode, debtResponse?.documentId)
@@ -33,7 +25,7 @@ export function QrResultPage() {
 
   return (
     <AppShell memberName={debtResponse?.memberName} fixedCode={debtResponse?.fixedCode}>
-      <PageHeader title="Código QR" action={<BackButton onClick={handleGoMenu} />} />
+      <PageHeader title="Código QR" action={<BackButton onClick={exitQrFlow} />} />
 
       <div className="mb-6">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cospail-navy/60">
@@ -41,13 +33,12 @@ export function QrResultPage() {
         </p>
       </div>
 
-      <PendingQrCard
+      <GeneratedQrCard
         pagoCospailId={initiatedPayment.pagoCospailId}
         qrImage={qrResult.qrImage}
         amount={initiatedPayment.totalAmount}
-        onAnnulled={handleAnnulled}
         onPaid={handlePaid}
-        onGoMenu={handleGoMenu}
+        onExit={exitQrFlow}
       />
     </AppShell>
   )

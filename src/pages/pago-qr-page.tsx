@@ -5,7 +5,7 @@ import { AppShell, BackButton } from '../components/app-shell'
 import { DebtList } from '../components/debt-list'
 import { EmptyState } from '../components/empty-state'
 import { CheckIcon, InfoIcon } from '../components/icons'
-import { PendingQrCard } from '../components/pending-qr-card'
+import { ActiveQrCard } from '../components/active-qr-card'
 import { ErrorBox, FullscreenLoading, LoadingState, PageHeader } from '../components/ui'
 import { getApiErrorMessage } from '../api/payments'
 import { useActiveQr } from '../hooks/use-active-qr'
@@ -142,7 +142,7 @@ export function PagoQrPage() {
             </p>
           </div>
 
-          <PendingQrCard
+          <ActiveQrCard
             pagoCospailId={activeQr.pagoCospailId}
             qrImage={activeQr.qrImage}
             amount={activeQr.amount}
@@ -211,6 +211,7 @@ export function PagoQrPage() {
           title="No tienes deudas pendientes"
           description="Tu cuenta de agua está al día. ¡Gracias por cumplir con tu cooperativa!"
           onBack={handleGoMenu}
+          showBackButton={false}
         />
       )}
 

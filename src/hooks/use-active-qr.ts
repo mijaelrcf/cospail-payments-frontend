@@ -12,5 +12,8 @@ export const useActiveQr = (fixedCode: number | null | undefined, documentId: st
       return getActiveQr(fixedCode, documentId)
     },
     enabled: Boolean(fixedCode && documentId),
+    // Nunca servir QR cacheado: un QR anulado/pagado no debe reaparecer
+    // como fantasma al re-entrar. Siempre verifica fresco contra el backend.
+    staleTime: 0,
   })
 }

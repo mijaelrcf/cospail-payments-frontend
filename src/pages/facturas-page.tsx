@@ -55,6 +55,7 @@ export function FacturasPage() {
           title="Sin facturas registradas"
           description="No se encontraron facturas de los últimos 6 meses para tu código fijo."
           onBack={() => navigate('/menu')}
+          showBackButton={false}
         />
       ) : (
         <div className="overflow-x-auto rounded-3xl bg-white shadow-sm ring-1 ring-cospail-navy/5">
