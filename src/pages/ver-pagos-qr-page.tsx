@@ -1,13 +1,13 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AppShell, BackButton } from '../components/app-shell'
 import { EmptyState } from '../components/empty-state'
 import { HistoryIcon } from '../components/icons'
-import { PaymentCard } from '../components/payment-card'
 import { PaymentDetailModal } from '../components/payment-detail-modal'
 import { ErrorBox, LoadingState } from '../components/ui'
 import { useRecentPayments } from '../hooks/use-recent-payments'
 import { useRequireAuth } from '../hooks/use-require-auth'
+import { formatCurrency, formatPaymentDate } from '../utils/format'
 import type { RecentPayment } from '../types/recent-payment'
 
 export function VerPagosQrPage() {
@@ -16,9 +16,19 @@ export function VerPagosQrPage() {
   const recentPaymentsQuery = useRecentPayments(debtResponse?.fixedCode)
   const [selectedPayment, setSelectedPayment] = useState<RecentPayment | null>(null)
 
-  if (!debtResponse) return null
+  // El backend ya ordena por fecha de pago desc; se re-ordena por
+  // seguridad dejando sin fecha al final.
+  const payments = useMemo(() => {
+    const list = [...(recentPaymentsQuery.data ?? [])]
+    list.sort((a, b) => {
+      const timeA = a.paidAtUtc ? new Date(a.paidAtUtc).getTime() : Number.NEGATIVE_INFINITY
+      const timeB = b.paidAtUtc ? new Date(b.paidAtUtc).getTime() : Number.NEGATIVE_INFINITY
+      return timeB - timeA
+    })
+    return list
+  }, [recentPaymentsQuery.data])
 
-  const payments = recentPaymentsQuery.data ?? []
+  if (!debtResponse) return null
 
   return (
     <AppShell memberName={debtResponse.memberName} fixedCode={debtResponse.fixedCode}>
@@ -45,15 +55,47 @@ export function VerPagosQrPage() {
           showBackButton={false}
         />
       ) : (
-        <ul className="space-y-3">
-          {payments.map((payment) => (
-            <PaymentCard
-              key={payment.pagoCospailId}
-              payment={payment}
-              onClick={() => setSelectedPayment(payment)}
-            />
-          ))}
-        </ul>
+        <div className="overflow-x-auto rounded-3xl bg-white shadow-sm ring-1 ring-cospail-navy/5">
+          <table className="w-full min-w-[480px] border-collapse text-left text-sm">
+            <thead>
+              <tr className="border-b border-cospail-navy/10 text-xs font-semibold uppercase tracking-[0.12em] text-cospail-navy/60">
+                <th scope="col" className="px-5 py-4">
+                  Fecha de Pago
+                </th>
+                <th scope="col" className="px-5 py-4 text-right">
+                  Monto
+                </th>
+                <th scope="col" className="px-5 py-4 text-right">
+                  Detalle
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {payments.map((payment) => (
+                <tr
+                  key={payment.pagoCospailId}
+                  className="border-b border-cospail-navy/5 transition last:border-0 hover:bg-cospail-sky-tint/40"
+                >
+                  <td className="px-5 py-4 font-semibold text-cospail-ink">
+                    {formatPaymentDate(payment.paidAtUtc)}
+                  </td>
+                  <td className="px-5 py-4 text-right font-display font-bold text-cospail-navy">
+                    {formatCurrency(payment.totalAmount)}
+                  </td>
+                  <td className="px-5 py-4 text-right">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPayment(payment)}
+                      className="rounded font-semibold text-cospail-sky underline decoration-cospail-sky/40 underline-offset-4 transition hover:text-cospail-navy hover:decoration-cospail-navy focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cospail-sky/30"
+                    >
+                      Ver Detalle
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
       <PaymentDetailModal

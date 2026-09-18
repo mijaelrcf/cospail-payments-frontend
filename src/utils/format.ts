@@ -10,6 +10,12 @@ export function formatMonth(value: string | null | undefined): string {
   return formatted.charAt(0).toUpperCase() + formatted.slice(1)
 }
 
+export function formatPaymentDate(value: string | null | undefined): string {
+  if (!value) return '—'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return date.toLocaleDateString('es-BO', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
 export function buildTimestampSuffix(date = new Date()): string {
   const yy = String(date.getFullYear()).slice(-2)
   const month = String(date.getMonth() + 1).padStart(2, '0')

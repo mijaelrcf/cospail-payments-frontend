@@ -7,7 +7,7 @@ import { InvoiceViewerModal } from '../components/invoice-viewer-modal'
 import { ErrorBox, LoadingState } from '../components/ui'
 import { useInvoices } from '../hooks/use-invoices'
 import { useRequireAuth } from '../hooks/use-require-auth'
-import { formatCurrency, formatMonth } from '../utils/format'
+import { formatCurrency, formatPaymentDate } from '../utils/format'
 import type { InvoiceSummary } from '../types/invoice'
 
 export function FacturasPage() {
@@ -63,7 +63,10 @@ export function FacturasPage() {
             <thead>
               <tr className="border-b border-cospail-navy/10 text-xs font-semibold uppercase tracking-[0.12em] text-cospail-navy/60">
                 <th scope="col" className="px-5 py-4">
-                  Mes
+                  Fecha de Pago
+                </th>
+                <th scope="col" className="px-5 py-4">
+                  Nro. de Crédito
                 </th>
                 <th scope="col" className="px-5 py-4 text-right">
                   Monto
@@ -80,7 +83,10 @@ export function FacturasPage() {
                   className="border-b border-cospail-navy/5 transition last:border-0 hover:bg-cospail-sky-tint/40"
                 >
                   <td className="px-5 py-4 font-semibold text-cospail-ink">
-                    {formatMonth(invoice.chargeDate)}
+                    {formatPaymentDate(invoice.chargeDate)}
+                  </td>
+                  <td className="px-5 py-4 font-mono font-medium text-cospail-navy">
+                    {invoice.creditNumber}
                   </td>
                   <td className="px-5 py-4 text-right font-display font-bold text-cospail-navy">
                     {formatCurrency(invoice.amount)}
