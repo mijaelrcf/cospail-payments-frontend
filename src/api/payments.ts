@@ -76,8 +76,8 @@ export interface GenerateQrRequest {
   branchCode?: string
 }
 
-// Canal de origen del QR. Valor fijo: el frontend siempre envía 'web'.
-export const DEFAULT_BRANCH_CODE = 'web'
+// Canal de origen del QR. Valor fijo: el frontend siempre envía 'WEB01'.
+export const DEFAULT_BRANCH_CODE = 'WEB01'
 
 export async function generateQr(payload: GenerateQrRequest): Promise<QrResult> {
   const response = await axiosClient.post('/BancoEconomico/generate-qr', {
