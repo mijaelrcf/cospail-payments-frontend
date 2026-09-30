@@ -24,6 +24,13 @@ export function getApiErrorMessage(error: unknown, fallback: string): string {
 
     const rawMessage = data?.detail ?? data?.message ?? data?.title
 
+    // Rechazo funcional del banco (502 "Error del banco"): el detalle trae el
+    // formato interno "Código/Mensaje", poco amigable. Se muestra un mensaje
+    // propio en español en lugar del texto crudo del banco.
+    if (status === 502 || data?.title === 'Error del banco') {
+      return 'El Banco Económico no está disponible en este momento. Por favor, inténtalo más tarde.'
+    }
+
     // El backend a veces devuelve mensajes técnicos/genéricos en inglés
     // (ej. "An unexpected error ocurred." o Message: null cuando el banco falla).
     // En esos casos mostramos el fallback amigable en español.

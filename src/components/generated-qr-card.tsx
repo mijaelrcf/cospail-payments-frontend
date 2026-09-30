@@ -4,8 +4,9 @@ import { useAnnulQr } from '../hooks/use-annul-qr'
 import { usePaymentStatus } from '../hooks/use-payment-status'
 import { isAnnulledStatus, isPaidStatus } from '../types/payment-status'
 import { formatCurrency } from '../utils/format'
-import { ClockIcon, XIcon } from './icons'
+import { XIcon } from './icons'
 import { QrViewer } from './qr-viewer'
+import { PaymentWaitIndicator } from './payment-wait-indicator'
 import { AnnulledQrView, PaidQrView } from './qr-status-views'
 import { ErrorBox, FullscreenLoading } from './ui'
 
@@ -85,12 +86,7 @@ export function GeneratedQrCard({ pagoCospailId, qrImage, amount, onPaid, onExit
             </div>
           </div>
 
-          <div className="mt-4 flex items-center gap-2.5 rounded-xl bg-cospail-sky-tint px-4 py-3">
-            <ClockIcon className="h-5 w-5 shrink-0 animate-pulse text-cospail-navy" />
-            <p className="text-sm font-medium text-cospail-navy">
-              Esperando tu pago… Esta pantalla se actualizará automáticamente.
-            </p>
-          </div>
+          <PaymentWaitIndicator />
 
           {!confirmingAnnul ? (
             <button
